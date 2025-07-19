@@ -1,0 +1,2 @@
+# ubuntu_bug_fix
+记录ubuntu系统的各种bug及解决方法
