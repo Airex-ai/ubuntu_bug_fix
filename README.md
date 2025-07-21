@@ -2,7 +2,9 @@
 
 记录ubuntu系统的各种bug及解决方法
 
+## Personal access tokens (classic)
 
+`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`
 
 ### 安装搜狗输入法
 
@@ -74,5 +76,16 @@ sudo apt install libgsettings-qt1 -y
 ```shell
 sudo apt install fcitx5-frontend-gtk4
 sudo shutdown -r now
+```
+
+
+
+### buntu WPS系统缺失字体symbol、wingdings、wingdings wingdings webding
+
+```shell
+git clone https://gitee.com/owlman/wps_fonts.git
+cd wps_fonts
+chmod 777 install_wps_fonts.sh 
+./install_wps_fonts.sh
 ```
 
