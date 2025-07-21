@@ -4,8 +4,6 @@
 
 ## Personal access tokens (classic)
 
-`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`
-
 ### 安装搜狗输入法
 
 1、更新源在终端执行 `sudo apt update`
