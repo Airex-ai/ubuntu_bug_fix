@@ -87,3 +87,42 @@ chmod 777 install_wps_fonts.sh
 ./install_wps_fonts.sh
 ```
 
+
+
+
+
+### 本地主机与服务器ROS2无法通信
+
+1. 本地主机创建文件在主目录下创建`cyclonedds.xml`文件：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CycloneDDS xmlns="https://cdds.io/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd">
+    <Domain id="any">
+        <Discovery>
+            <Peers>
+                <Peer address="192.168.1.101"/>
+            </Peers>
+        </Discovery>
+    </Domain>
+</CycloneDDS>
+```
+
+其中`Peer address`是服务器ip
+
+2. 重启ROS2
+
+```sh
+export ROS_DOMAIN_ID=0
+export ROS_IP=192.168.1.106
+export CYCLONEDDS_URI=file:///home/airex/cyclonedds.xml			#本地主机的配置文件
+ros2 daemon stop && ros2 daemon start
+```
+
+3. 服务器设置
+
+```sh
+export ROS_DOMAIN_ID=0
+export ROS_IP=192.168.1.101
+```
+
