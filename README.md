@@ -93,36 +93,132 @@ chmod 777 install_wps_fonts.sh
 
 ### 本地主机与服务器ROS2无法通信
 
-1. 本地主机创建文件在主目录下创建`cyclonedds.xml`文件：
+- 两台主机在同一局域网内
 
-```xml
+- **主机A (当前主机)**: IP `192.168.1.106`
+- **主机B (目标主机)**: IP `192.168.1.XXX` (需要确认实际IP)
+
+#### 步骤1: 创建CycloneDDS配置文件
+
+在新主机上创建配置文件：
+
+```bash
+# 创建配置文件
+cat > ~/cyclonedds.xml << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <CycloneDDS xmlns="https://cdds.io/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd">
     <Domain id="any">
+        <General>
+            <NetworkInterfaceAddress>192.168.1.XXX</NetworkInterfaceAddress>
+            <AllowMulticast>true</AllowMulticast>
+            <MaxMessageSize>65500</MaxMessageSize>
+            <EnableMulticastLoopback>true</EnableMulticastLoopback>
+        </General>
         <Discovery>
+            <ParticipantIndex>auto</ParticipantIndex>
+            <MaxAutoParticipantIndex>100</MaxAutoParticipantIndex>
             <Peers>
-                <Peer address="192.168.1.101"/>
+                <Peer address="192.168.1.106"/>
+                <Peer address="192.168.1.106:7400"/>
+                <Peer address="192.168.1.XXX:7400"/>
             </Peers>
+            <DefaultMulticastAddress>239.255.0.1</DefaultMulticastAddress>
+            <Ports>
+                <Base>7400</Base>
+                <DomainGain>200</DomainGain>
+                <ParticipantGain>2</ParticipantGain>
+                <MulticastMetaOffset>0</MulticastMetaOffset>
+                <MulticastDataOffset>10</MulticastDataOffset>
+                <UnicastMetaOffset>1</UnicastMetaOffset>
+                <UnicastDataOffset>11</UnicastDataOffset>
+            </Ports>
         </Discovery>
+        <Internal>
+            <Watermarks>
+                <WhcHigh>500</WhcHigh>
+            </Watermarks>
+        </Internal>
+        <Tracing>
+            <Verbosity>0</Verbosity>
+        </Tracing>
     </Domain>
 </CycloneDDS>
+EOF
 ```
 
-其中`Peer address`是服务器ip
+**重要**: 将上述配置文件中的 `192.168.1.XXX` 替换为新主机的实际IP地址！
 
-2. 重启ROS2
+#### 步骤2: 创建ROS2初始化脚本
 
-```sh
-export ROS_DOMAIN_ID=0
-export ROS_IP=192.168.1.106
-export CYCLONEDDS_URI=file:///home/airex/cyclonedds.xml			#本地主机的配置文件
-ros2 daemon stop && ros2 daemon start
+```bash
+# 创建初始化脚本
+cat > ~/.ros2_init << 'EOF'
+#!/bin/bash
+# ROS2网络初始化脚本
+
+# 获取本机IP地址（自动检测）
+LOCAL_IP=$(hostname -I | awk '{print $1}')
+
+# 设置ROS2网络环境变量
+export ROS_DOMAIN_ID=24
+export ROS_IP=$LOCAL_IP
+export CYCLONEDDS_URI=file://$HOME/cyclonedds.xml
+
+# 重启ROS2守护进程以应用新配置
+echo "初始化ROS2网络配置..."
+ros2 daemon stop >/dev/null 2>&1
+ros2 daemon start >/dev/null 2>&1
+
+echo "ROS2网络配置完成！"
+echo "ROS_DOMAIN_ID=$ROS_DOMAIN_ID"
+echo "ROS_IP=$ROS_IP"
+echo "本机IP: $LOCAL_IP"
+EOF
+
+# 给脚本添加执行权限
+chmod +x ~/.ros2_init
 ```
 
-3. 服务器设置
+#### 步骤3: 配置全局环境变量
 
-```sh
-export ROS_DOMAIN_ID=0
-export ROS_IP=192.168.1.101
+```bash
+# 备份原bashrc
+cp ~/.bashrc ~/.bashrc.backup
+
+# 添加ROS2网络配置到bashrc
+cat >> ~/.bashrc << 'EOF'
+
+# >>> ROS2 Network Configuration >>>
+# 配置ROS2跨机器节点发现
+export ROS_DOMAIN_ID=24
+export ROS_IP=$(hostname -I | awk '{print $1}')
+export CYCLONEDDS_URI=file://$HOME/cyclonedds.xml
+
+# 自动初始化ROS2网络配置（仅在交互式shell中）
+if [[ $- == *i* ]] && command -v ros2 >/dev/null 2>&1; then
+    ~/.ros2_init >/dev/null 2>&1
+fi
+
+# ROS2网络配置别名
+alias ros2-init="~/.ros2_init"
+alias ros2-network="echo 'ROS_DOMAIN_ID=$ROS_DOMAIN_ID, ROS_IP=$ROS_IP, CYCLONEDDS_URI=$CYCLONEDDS_URI'"
+# <<< ROS2 Network Configuration <<<
+EOF
+
+# 重新加载bashrc
+source ~/.bashrc
 ```
 
+#### 步骤5: 配置防火墙（如果需要）
+
+```bash
+# 检查UFW状态
+sudo ufw status
+
+# 如果UFW启用，添加ROS2规则
+sudo ufw allow 7400/udp  # ROS2发现端口
+sudo ufw allow 7410/udp  # ROS2数据端口
+
+# 或者完全禁用UFW进行测试（生产环境不推荐）
+# sudo ufw disable
+```
