@@ -222,3 +222,72 @@ sudo ufw allow 7410/udp  # ROS2数据端口
 # 或者完全禁用UFW进行测试（生产环境不推荐）
 # sudo ufw disable
 ```
+
+
+
+
+
+### 本地主机（公网）与服务器（内网）无法直接通信
+
+#### 步骤1：笔记本与主机通过网线连接并能正常通信
+
+#### 步骤2: 笔记本开启ssh服务
+
+#### 步骤3：在本机上建立 SSH 动态代理
+
+```sh
+ssh -D 1080 -f -N -q username@192.168.55.101   #192.168.55.101是通过网线设置的ip
+```
+
+`-D 1080`：开启 SOCKS5 代理，监听本机 1080 端口
+
+`-f`：后台运行
+
+`-N`：不执行远程命令
+
+`username`：笔记本的系统用户名
+
+#### 步骤4：配置本机应用使用代理
+
+```sh
+# 安装 proxychains 工具
+sudo apt install proxychains
+# 编辑配置文件
+sudo vim /etc/proxychains.conf
+```
+
+修改最后一行：
+
+```sh
+socks5  127.0.0.1 1080
+```
+
+然后通过 proxychains 访问内网服务器：
+
+```sh
+proxychains ssh user@192.168.4.72
+```
+
+#### 步骤5：通过设置ssh配置文件，使用编译器连接服务器
+
+```
+# 内网服务器配置（192.168.4.72）
+Host 192.168.4.72
+    HostName 192.168.4.72
+    User your_server_username  # 替换为内网服务器的用户名（如 root）
+    Port 22  # 内网服务器的 SSH 端口，默认 22
+    ProxyCommand nc -X 5 -x 127.0.0.1:1080 %h %p  # 核心：走 SOCKS5 代理
+```
+
+`nc` 是 netcat 工具，Linux/macOS 一般自带，Windows 需安装 OpenSSH 并确保 nc 可用。
+
+如果提示 `nc: invalid option -- X`，说明你的 nc 版本不支持 `-X`，安装 socat：
+
+```sh
+sudo apt install socat
+```
+
+```
+ProxyCommand socat - PROXY:127.0.0.1:%h:%p,proxyport=1080,proxytype=socks5
+```
+
