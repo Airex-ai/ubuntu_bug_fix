@@ -227,6 +227,55 @@ sudo ufw allow 7410/udp  # ROS2数据端口
 
 
 
+### 本地主机与docker容器ROS2无法通信
+
+```sh
+sudo docker run -dit --rm \
+  --net=host \
+  --ipc=host \
+  --pid=host \
+  --privileged \
+  -v /dev:/dev \
+  -v /dev/bus/usb:/dev/bus/usb \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -e DISPLAY=$DISPLAY \
+  -v /etc/localtime:/etc/localtime:ro \
+  -v $(pwd):/workspace \
+  -v /dev/shm:/dev/shm\
+  --name demo \
+  gr00t_thor_ros2:latest 
+```
+
+如果使用了 `--net=host` 仍然看不到，请检查以下几点：
+
+1. **ROS_DOMAIN_ID 一致性：** 确保宿主机以及 **Docker 容器内部** 的环境变量 `ROS_DOMAIN_ID` 是相同的（或者都没有设置，默认为 0）。
+
+   Bash
+
+   ```sh
+   # 在容器内检查
+   echo $ROS_DOMAIN_ID
+   ```
+
+2. **ROS_LOCALHOST_ONLY 变量：** 检查容器内是否意外设置了 `ROS_LOCALHOST_ONLY=1`。这会强制 ROS 2 只在本地回环接口通信。
+
+   Bash
+
+   ```sh
+   # 确保它为空或 0
+   unset ROS_LOCALHOST_ONLY
+   ```
+
+3. **防火墙：** 确保两台主机的防火墙（`ufw` 或 `iptables`）允许 UDP 通信，特别是 DDS 默认使用的端口。最简单的测试方法是暂时关闭防火墙：
+
+   Bash
+
+   ```sh
+   sudo ufw disable
+   ```
+
+
+
 ### 本地主机（公网）与服务器（内网）无法直接通信
 
 #### 步骤1：笔记本与主机通过网线连接并能正常通信
