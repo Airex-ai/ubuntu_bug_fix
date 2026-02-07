@@ -340,3 +340,41 @@ sudo apt install socat
 ProxyCommand socat - PROXY:127.0.0.1:%h:%p,proxyport=1080,proxytype=socks5
 ```
 
+
+
+
+
+### 本地主机共享VPN到远程服务器（单个命令行有效）
+
+```sh
+#=================本地
+ssh -R 7890:127.0.0.1:7890 username@server_ip 
+#-R [服务器端口]:127.0.0.1:[本地代理端口]，让服务器监听它的 7890 端口，并将所有发往该端口的流量通过 SSH 隧道转发到你本地主机的 7890 端口。
+
+#===================服务器
+export http_proxy=http://127.0.0.1:7890
+export https_proxy=http://127.0.0.1:7890
+```
+
+```sh
+#=================本地ssh配置文件
+Host wit-A800
+    HostName 124.221.114.84
+    Port 3602
+    User wit
+    ForwardX11 yes
+    ForwardX11Trusted yes
+    ForwardAgent yes
+    # 添加下面这一行：将服务器的 7890 转发到本地的 127.0.0.1:7897
+    RemoteForward 7890 127.0.0.1:7897
+    # 可选：如果端口被占用则报错提醒，方便排查
+    ExitOnForwardFailure yes
+   
+#===================服务器.bashrc文件中
+alias proxyon='export http_proxy=http://127.0.0.1:7890 https_proxy=http://127.0.0.1:7890'
+alias proxyoff='unset http_proxy https_proxy'
+
+source ~/.bashrc
+proxyon
+```
+
