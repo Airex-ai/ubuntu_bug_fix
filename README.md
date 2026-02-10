@@ -365,13 +365,13 @@ Host wit-A800
     ForwardX11 yes
     ForwardX11Trusted yes
     ForwardAgent yes
-    # 添加下面这一行：将服务器的 7890 转发到本地的 127.0.0.1:7897
-    RemoteForward 7890 127.0.0.1:7897
+    # 添加下面这一行：将服务器的 7897 转发到本地的 127.0.0.1:7897
+    RemoteForward 7897 127.0.0.1:7897
     # 可选：如果端口被占用则报错提醒，方便排查
     ExitOnForwardFailure yes
    
 #===================服务器.bashrc文件中
-alias proxyon='export http_proxy=http://127.0.0.1:7890 https_proxy=http://127.0.0.1:7890'
+alias proxyon='export http_proxy=http://127.0.0.1:7897 https_proxy=http://127.0.0.1:7897'
 alias proxyoff='unset http_proxy https_proxy'
 
 source ~/.bashrc
