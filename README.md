@@ -378,3 +378,8 @@ source ~/.bashrc
 proxyon
 ```
 
+
+### 从服务器以断点方式下载文件
+```
+rsync -P -r -e "ssh -p 3602" wit@124.221.114.84:/media/wit/SSD_0/ycb/projectFile/openpi/checkpoints/pi05_pick0104_2views_full_finetune/1/25000 /home/airex/Downloads/openpi/checkpoints
+```
