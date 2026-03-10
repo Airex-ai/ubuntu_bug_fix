@@ -434,24 +434,5 @@ launch.json:   对应的原始命令为“CUDA_VISIBLE_DEVICES=2,3,4,5  XLA_PYTH
 
 ### 调试jax框架时查看变量实际值
 1. 在main函数顶端插入“    jax.config.update("jax_disable_jit", True)  # DEBUG: 关闭JIT”
-2. 直接在需要查看变量值的位置编写代码
-```python
-    @override
-    def compute_loss(
-        self, rng: at.KeyArrayLike, observation: _model.Observation, actions: _model.Actions, *, train: bool = False
-    ) -> at.Float[at.Array, "*b ah"]:
-        preprocess_rng, noise_rng, time_rng = jax.random.split(rng, 3)
-        observation = _model.preprocess_observation(preprocess_rng, observation, train=train)
-
-        batch_shape = actions.shape[:-2]
-        # DEBUG: 打印actions具体值
-        print(f"[DEBUG] actions.shape = {actions.shape}")
-        print(f"[DEBUG] actions.dtype = {actions.dtype}")
-        print(f"[DEBUG] actions =\n{actions}")
-        noise = jax.random.normal(noise_rng, actions.shape)
-        time = jax.random.beta(time_rng, 1.5, 1, batch_shape) * 0.999 + 0.001
-        time_expanded = time[..., None, None]
-        x_t = time_expanded * noise + (1 - time_expanded) * actions
-        u_t = noise - actions
-```
+2. 调试中直接悬浮鼠标查看即可
 
