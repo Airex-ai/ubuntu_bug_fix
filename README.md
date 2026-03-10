@@ -383,3 +383,49 @@ proxyon
 ```
 rsync -P -r -e "ssh -p 3602" wit@124.221.114.84:/media/wit/SSD_0/ycb/projectFile/openpi/checkpoints/pi05_pick0104_2views_full_finetune/1/25000 /home/airex/Downloads/openpi/checkpoints
 ```
+
+### vscode设置python调试文件
+launch.json:   对应的原始命令为“CUDA_VISIBLE_DEVICES=2,3,4,5  XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 uv run scripts/train.py  pi05_Synapath_lerobot_v21 --exp-name=my_experiment --overwrite”
+
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "serve_policy: PICK_CUBE",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/serve_policy.py",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "args": [
+                "--env", "PICK_CUBE",
+                "--default_prompt", "Stack red cube on green cube, then stack yellow cube on blue cube | A robot is on a flat tabletop with four colored cubes: red, green, yellow, blue placed on the table."
+            ],
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "0,1,2,3"
+            },
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "serve_policy: train",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/train.py",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "args": [
+                "pi05_Synapath_lerobot_v21",
+                "--exp-name", "my_experiment",
+                "--overwrite"
+            ],
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "2,3,4,5",
+                "XLA_PYTHON_CLIENT_MEM_FRACTION": "0.9"
+            },
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "cwd": "${workspaceFolder}"
+        },
+    ]
+}
+
