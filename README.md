@@ -387,6 +387,7 @@ rsync -P -r -e "ssh -p 3602" wit@124.221.114.84:/media/wit/SSD_0/ycb/projectFile
 ### vscode设置python调试文件
 launch.json:   对应的原始命令为“CUDA_VISIBLE_DEVICES=2,3,4,5  XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 uv run scripts/train.py  pi05_Synapath_lerobot_v21 --exp-name=my_experiment --overwrite”
 
+```json
 {
     "version": "0.2.0",
     "configurations": [
@@ -428,4 +429,5 @@ launch.json:   对应的原始命令为“CUDA_VISIBLE_DEVICES=2,3,4,5  XLA_PYTH
         },
     ]
 }
+```
 
